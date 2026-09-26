@@ -1,7 +1,8 @@
 # Securite : sur un depot public, le runner ne s enregistre que si les workflows de TOUS
 # les contributeurs externes attendent votre approbation. Lecture faite sur le poste de
 # controle avec votre connexion gh (jamais en root), a chaque execution, AVANT toute
-# installation : un refus ne laisse rien de modifie sur la machine.
+# installation : un refus, ou un GitHub qui ne repond pas, ne laisse rien de modifie
+# sur la machine. Trois essais espaces de 3 s avant d abandonner.
 - name: Lire le reglage d approbation des workflows venant de forks
   ansible.builtin.command:
     argv: [gh, api, "repos/{{ github_owner }}/devops-tasktracker/actions/permissions/fork-pr-contributor-approval",
@@ -10,15 +11,31 @@
   become: false
   run_once: true
   changed_when: false
+  failed_when: false
   register: fork_approval
+  until: fork_approval.rc == 0 or fork_approval.stderr is search('HTTP 40[14]|gh auth login')
+  retries: 2
+  delay: 3
+
+- name: Arreter si GitHub n a pas donne le reglage
+  ansible.builtin.fail:
+    msg: >-
+      {% if fork_approval.stderr is search('HTTP 404') %}Dépôt {{ github_owner }}/devops-tasktracker introuvable
+      (HTTP 404) : vérifiez github_owner dans deploy/group_vars/app.yml, puis relancez le playbook.
+      {%- elif fork_approval.stderr is search('HTTP 401|gh auth login') %}gh n'est pas connecté à GitHub :
+      lancez atelier-init, puis relancez le playbook.
+      {%- else %}GitHub injoignable ou limite atteinte, relancez dans 1 minute
+      ({{ (fork_approval.stderr | default('') | trim).splitlines() | last | default('pas de réponse') }}).{% endif %}
+  when: fork_approval.rc != 0
+  run_once: true
 
 - name: Refuser d enregistrer le runner sans approbation pour tous les contributeurs externes
   ansible.builtin.assert:
     that: (fork_approval.stdout | trim) == 'all_external_contributors'
     fail_msg: >-
-      Reglage actuel : {{ fork_approval.stdout | trim }}. Sur GitHub, Settings, Actions, General,
+      Réglage actuel : {{ fork_approval.stdout | trim }}. Sur GitHub, Settings, Actions, General,
       Approval for running fork pull request workflows from contributors doit valoir
-      Require approval for all external contributors avant l installation du runner (docs/J4.md section 6).
+      Require approval for all external contributors avant l'installation du runner (docs/J4.md section 6).
   run_once: true
 
 - name: Installer les bibliotheques dont le runner a besoin
@@ -68,17 +85,22 @@
 - name: Exiger le jeton d enregistrement au premier passage
   ansible.builtin.assert:
     that: lookup('env', 'RUNNER_TOKEN') | length > 0
-    fail_msg: "RUNNER_TOKEN est vide : voir docs/J4.md, etape Runner"
+    fail_msg: "RUNNER_TOKEN est vide : voir docs/J4.md, étape Runner"
   when: not runner_registered.stat.exists
 
 # runuser plutot que become_user : pas de fichier temporaire a partager avec un
 # utilisateur non privilegie (ansible-core 2.14 sans acl), et jamais root.
+# Le jeton passe par ACTIONS_RUNNER_INPUT_TOKEN, que config.sh lit a la place de
+# --token puis efface : il n apparait jamais dans la ligne de commande d un
+# processus (lisible par tous dans /proc), seulement dans son environnement.
 - name: Enregistrer le runner aupres de votre fork
   ansible.builtin.command:
     argv: [runuser, -u, "{{ runner_user }}", --, ./config.sh, --unattended, --url, "{{ runner_repo_url }}",
-           --token, "{{ lookup('env', 'RUNNER_TOKEN') }}", --name, "{{ runner_name }}", --labels, "{{ runner_labels }}", --replace]
+           --name, "{{ runner_name }}", --labels, "{{ runner_labels }}", --replace]
     chdir: "{{ runner_dir }}"
     creates: "{{ runner_dir }}/.runner"
+  environment:
+    ACTIONS_RUNNER_INPUT_TOKEN: "{{ lookup('env', 'RUNNER_TOKEN') }}"
   no_log: true
 
 - name: Installer le service systemd du runner
