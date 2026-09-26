@@ -5,3 +5,5 @@ coverage
 tests
 docs
 .devcontainer
+.env
+.env.*
