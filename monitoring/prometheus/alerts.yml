@@ -1,0 +1,10 @@
+groups:
+  - name: tasktracker
+    rules:
+      - alert: AppDown
+        expr: up{job="app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "L'application ne repond plus a Prometheus depuis 1 minute"

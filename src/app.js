@@ -1,5 +1,6 @@
 const express = require('express');
 const service = require('./tasks/service');
+const { register, metricsMiddleware } = require('./metrics');
 
 function parseId(raw) {
   const id = Number(raw);
@@ -17,6 +18,7 @@ function parseDone(raw) {
 function createApp({ repo, logger }) {
   const app = express();
   app.use(express.json());
+  app.use(metricsMiddleware);
 
   app.use((req, res, next) => {
     const start = process.hrtime.bigint();
@@ -58,6 +60,11 @@ function createApp({ repo, logger }) {
 
   app.get('/stats', async (req, res) => {
     res.json(await service.countByStatus(repo));
+  });
+
+  app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
   });
 
   // Express recognises an error handler by its 4 parameters, so `next` must stay.

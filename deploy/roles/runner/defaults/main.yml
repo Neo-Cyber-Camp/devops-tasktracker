@@ -1,0 +1,8 @@
+runner_version: "2.337.0"
+runner_sha256: "70920811a4f8ad4328818682bca5c6469c1c942fab52448868071d0063816613"
+runner_url: "https://github.com/actions/runner/releases/download/v{{ runner_version }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+runner_user: runner
+runner_dir: /opt/actions-runner
+runner_name: "range-{{ inventory_hostname }}"
+runner_labels: range
+runner_repo_url: "https://github.com/{{ github_owner }}/devops-tasktracker"

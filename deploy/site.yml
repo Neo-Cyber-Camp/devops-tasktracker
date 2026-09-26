@@ -1,0 +1,5 @@
+- name: Preparer le serveur et installer le runner GitHub auto-heberge
+  hosts: app
+  become: true
+  roles:
+    - runner
