@@ -4,9 +4,10 @@ API de gestion de tâches écrite en Node.js. C'est le fil rouge du cours DevOps
 
 ## Démarrer
 
-Prérequis : Node.js 24 et npm, ou ouvrez simplement le dépôt dans GitHub Codespaces (Node.js 24 et Docker y sont préinstallés).
+Votre poste de travail est le lab **Atelier projet DevOps** du Range : Node.js 24, Git et Docker y sont préinstallés. Forkez ce dépôt, ouvrez l'Atelier et lancez `atelier-init` : il connecte la machine à GitHub et clone votre fork dans `~/devops-tasktracker` (détails dans [docs/J1.md](docs/J1.md), section 1). Hors Atelier, il vous faut Node.js 24, npm et Git.
 
 ```bash
+cd ~/devops-tasktracker   # le clone créé par atelier-init
 npm ci          # installe les dépendances exactes du package-lock.json
 npm test        # lance les tests Jest
 npm run lint    # vérifie le style avec ESLint
@@ -57,6 +58,7 @@ Chaque matin, une branche `start-jN` (publiée le matin du jour N) contient la c
 git add -A && git commit -m "wip: avant rattrapage"   # si vous avez des modifications
 git fetch upstream
 git merge -X theirs --no-edit upstream/start-j2       # remplacez j2 par le jour qui commence
+git commit --allow-empty -m "rattrapage J2"            # un commit à vous, même si la fusion n'en crée aucun
 ```
 
-La remote `upstream` pointe vers le dépôt du cours ; vous l'ajoutez le premier jour (voir `docs/J1.md`).
+La remote `upstream` pointe vers le dépôt du cours ; dans l'Atelier, `atelier-init` l'ajoute pour vous (voir `docs/J1.md`).
