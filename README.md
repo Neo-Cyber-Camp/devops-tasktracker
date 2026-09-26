@@ -51,11 +51,12 @@ Sans variable `DATABASE_URL`, l'API garde les tâches en mémoire (elles dispara
 
 ## Rattrapage
 
-Chaque matin, une branche `start-jN` contient la correction des jours précédents. Si vous n'avez pas terminé la veille, récupérez-la dans votre fork :
+Chaque matin, une branche `start-jN` (publiée le matin du jour N) contient la correction des jours précédents. Si vous n'avez pas terminé la veille, récupérez-la dans votre fork :
 
 ```bash
+git add -A && git commit -m "wip: avant rattrapage"   # si vous avez des modifications
 git fetch upstream
-git merge upstream/start-j2     # remplacez j2 par le jour qui commence
+git merge -X theirs --no-edit upstream/start-j2       # remplacez j2 par le jour qui commence
 ```
 
 La remote `upstream` pointe vers le dépôt du cours ; vous l'ajoutez le premier jour (voir `docs/J1.md`).
