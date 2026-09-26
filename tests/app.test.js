@@ -34,3 +34,12 @@ test('DELETE /tasks/99 renvoie 404', async () => {
   expect(res.status).toBe(404);
 });
 
+test('GET /stats compte les taches par statut', async () => {
+  const app = buildApp();
+  await request(app).post('/tasks').send({ title: 'A' });
+  const b = await request(app).post('/tasks').send({ title: 'B' });
+  await request(app).patch(`/tasks/${b.body.id}`).send({ done: true });
+  const res = await request(app).get('/stats');
+  expect(res.status).toBe(200);
+  expect(res.body).toEqual({ done: 1, todo: 1 });
+});

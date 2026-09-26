@@ -44,7 +44,7 @@ async function deleteTask(repo, id) {
 
 async function countByStatus(repo) {
   const tasks = await repo.findAll();
-  const done = tasks.filter((task) => task.done === 'true').length;
+  const done = tasks.filter((task) => task.done === true).length;
   return { done, todo: tasks.length - done };
 }
 
