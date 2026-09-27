@@ -47,7 +47,7 @@ Sans variable `DATABASE_URL`, l'API garde les tâches en mémoire (elles dispara
 | J1 | Tests automatisés et premier pipeline | [docs/J1.md](docs/J1.md) |
 | J2 | Conteneurs, Compose et reverse proxy Nginx | [docs/J2.md](docs/J2.md) |
 | J3 | Pipeline GitHub Actions complet | [docs/J3.md](docs/J3.md) |
-| J4 | Déploiement avec Ansible, supervision Prometheus et Grafana | publié avant le jour J4 |
+| J4 | Déploiement avec Ansible, supervision Prometheus et Grafana | [docs/J4.md](docs/J4.md) |
 | J5 | Journaux avec Loki, projet final | publié avant le jour J5 |
 
 ## Rattrapage
