@@ -5,4 +5,3 @@ runner_user: runner
 runner_dir: /opt/actions-runner
 runner_name: "range-{{ inventory_hostname }}"
 runner_labels: range
-runner_repo_url: "https://github.com/{{ github_owner }}/devops-tasktracker"

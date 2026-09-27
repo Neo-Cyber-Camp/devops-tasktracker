@@ -93,9 +93,12 @@
 # Le jeton passe par ACTIONS_RUNNER_INPUT_TOKEN, que config.sh lit a la place de
 # --token puis efface : il n apparait jamais dans la ligne de commande d un
 # processus (lisible par tous dans /proc), seulement dans son environnement.
+# L URL est construite avec le meme github_owner que la lecture du reglage
+# d approbation : le runner ne peut s enregistrer que sur le depot verifie.
 - name: Enregistrer le runner aupres de votre fork
   ansible.builtin.command:
-    argv: [runuser, -u, "{{ runner_user }}", --, ./config.sh, --unattended, --url, "{{ runner_repo_url }}",
+    argv: [runuser, -u, "{{ runner_user }}", --, ./config.sh, --unattended,
+           --url, "https://github.com/{{ github_owner }}/devops-tasktracker",
            --name, "{{ runner_name }}", --labels, "{{ runner_labels }}", --replace]
     chdir: "{{ runner_dir }}"
     creates: "{{ runner_dir }}/.runner"
