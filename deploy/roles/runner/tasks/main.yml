@@ -95,16 +95,31 @@
 # processus (lisible par tous dans /proc), seulement dans son environnement.
 # L URL est construite avec le meme github_owner que la lecture du reglage
 # d approbation : le runner ne peut s enregistrer que sur le depot verifie.
-- name: Enregistrer le runner aupres de votre fork
-  ansible.builtin.command:
-    argv: [runuser, -u, "{{ runner_user }}", --, ./config.sh, --unattended,
-           --url, "https://github.com/{{ github_owner }}/devops-tasktracker",
-           --name, "{{ runner_name }}", --labels, "{{ runner_labels }}", --replace]
-    chdir: "{{ runner_dir }}"
-    creates: "{{ runner_dir }}/.runner"
-  environment:
-    ACTIONS_RUNNER_INPUT_TOKEN: "{{ lookup('env', 'RUNNER_TOKEN') }}"
-  no_log: true
+# no_log masque toute la sortie de la tache (le jeton est dans son environnement) :
+# en cas d echec, la tache de secours donne la ligne d erreur de config.sh, qui ne
+# contient pas le jeton (masque quand meme par precaution).
+- name: Enregistrer le runner, avec une explication en cas de refus
+  block:
+    - name: Enregistrer le runner aupres de votre fork
+      ansible.builtin.command:
+        argv: [runuser, -u, "{{ runner_user }}", --, ./config.sh, --unattended,
+               --url, "https://github.com/{{ github_owner }}/devops-tasktracker",
+               --name, "{{ runner_name }}", --labels, "{{ runner_labels }}", --replace]
+        chdir: "{{ runner_dir }}"
+        creates: "{{ runner_dir }}/.runner"
+      environment:
+        ACTIONS_RUNNER_INPUT_TOKEN: "{{ lookup('env', 'RUNNER_TOKEN') }}"
+      no_log: true
+      register: runner_config
+  rescue:
+    - name: Expliquer le refus de config.sh (sans le jeton)
+      ansible.builtin.fail:
+        msg: >-
+          config.sh a refusé l'enregistrement du runner ({{ ((runner_config.stderr_lines | default([]))
+          + (runner_config.stdout_lines | default([]))) | map('trim') | select | list | first
+          | default('sans message') | replace(lookup('env', 'RUNNER_TOKEN') or 'jeton-absent', '***') }}).
+          Cause la plus fréquente : le jeton RUNNER_TOKEN a expiré (il vaut 1 heure). Relancez la commande
+          RUNNER_TOKEN=... ansible-playbook de docs/J4.md section 7, qui demande un nouveau jeton.
 
 - name: Installer le service systemd du runner
   ansible.builtin.command:
